@@ -1,0 +1,30 @@
+# Virtual environments
+gui_env/
+venv/
+env/
+.venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Generated outputs
+outputs/
+
+# Data file (user uploads via app)
+Surveys.xlsx
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
