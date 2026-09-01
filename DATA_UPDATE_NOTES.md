@@ -188,3 +188,43 @@ One respondent shifts a Women Representative percentage by 12.5 points. Report
 counts alongside percentages (the outputs already do), and avoid language implying
 statistical inference. The General Public group (n=53) is the only one where
 percentages are reasonably stable on their own.
+
+---
+
+## Why the app appeared to ignore your upload
+
+Uploading a file only replaced `Surveys.xlsx` on disk. Every results tab is built
+from the CSVs in `outputs/`, which are written by the analysis scripts — so until
+you clicked **Run Full Pipeline**, you kept seeing the previous run's numbers with
+nothing on screen indicating they were out of date. (The Data Preview tab reads the
+workbook directly, which is why *that* tab did show your new data.)
+
+A second problem compounded it: the six data loaders were declared as
+`@st.cache_data` with **no arguments**, so their cache key was just the function
+name. Streamlit therefore kept serving the first results it ever read, even after
+the pipeline rewrote the files on disk.
+
+Three fixes:
+
+1. **Uploading now triggers the analysis automatically.** A new upload is detected
+   by content hash, the cache is dropped, and the pipeline runs. There is a
+   checkbox in the sidebar to turn this off if you prefer the manual button.
+2. **Loaders are cached on file modification time and size**, so any change on
+   disk invalidates the cache. Verified: rewriting a results CSV is picked up on
+   the next read without any explicit cache clear.
+3. **A red banner appears across the top of every tab** when the results in
+   `outputs/` were produced from a different file than the one currently uploaded.
+   The app records the hash of the analysed workbook in `outputs/.pipeline_stamp.json`
+   and compares on every page load.
+
+Tested end to end: analysed the workbook, changed 10 answers on General Public Q13,
+and the app reported `stale` before re-running and the corrected counts
+(men/patriarchy 28 → 18, household work 10 → 20) after.
+
+### One thing to know about Streamlit Cloud
+
+`Surveys.xlsx` and `outputs/` are both in `.gitignore`, so they are not in your
+repo. Streamlit Cloud's filesystem is also **ephemeral** — it is wiped whenever the
+app reboots or redeploys. After a restart you will need to upload the workbook
+again and let it re-analyse. That is expected behaviour, not a fault; keeping
+survey data out of a public repo is the right call.

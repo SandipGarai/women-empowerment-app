@@ -15,7 +15,10 @@ How to run:
 Then open the URL shown in the terminal (usually http://localhost:8501).
 """
 
+import hashlib
+import json
 import subprocess
+from datetime import datetime
 import sys
 from pathlib import Path
 
@@ -66,6 +69,82 @@ THEMES = [
     "Women Representative Perspective",
     "Other",
 ]
+
+
+# Records which Surveys.xlsx produced the results currently in outputs/.
+PIPELINE_STAMP = OUTPUTS_DIR / ".pipeline_stamp.json"
+
+
+def data_fingerprint(path=None):
+    """MD5 of the survey workbook, or None if it is not present."""
+    path = Path(path) if path else DEFAULT_EXCEL
+    if not path.exists():
+        return None
+    digest = hashlib.md5()
+    with open(path, "rb") as handle:
+        for chunk in iter(lambda: handle.read(65536), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def write_pipeline_stamp():
+    """Record the fingerprint of the data the pipeline just processed."""
+    OUTPUTS_DIR.mkdir(parents=True, exist_ok=True)
+    PIPELINE_STAMP.write_text(json.dumps({
+        "data_fingerprint": data_fingerprint(),
+        "completed_at": datetime.now().isoformat(timespec="seconds"),
+    }))
+
+
+def read_pipeline_stamp():
+    if not PIPELINE_STAMP.exists():
+        return {}
+    try:
+        return json.loads(PIPELINE_STAMP.read_text())
+    except (ValueError, OSError):
+        return {}
+
+
+def results_status():
+    """
+    Compare the workbook on disk with the one that produced outputs/.
+
+    Returns (state, message) where state is one of:
+      "no_data"   - nothing uploaded yet
+      "no_results"- data present but pipeline never run
+      "stale"     - results were produced from a DIFFERENT file
+      "current"   - results match the uploaded data
+    """
+    current = data_fingerprint()
+    if current is None:
+        return "no_data", "No survey workbook found. Upload Surveys.xlsx in the sidebar."
+
+    stamp = read_pipeline_stamp()
+    if not stamp:
+        if not (OUTPUTS_DIR / "descriptive_results" / "all_descriptive_results.csv").exists():
+            return "no_results", "Data uploaded, but the analysis has not been run yet."
+        return "stale", (
+            "Results exist but it is not recorded which file produced them. "
+            "Re-run the pipeline to be sure they match your uploaded data."
+        )
+
+    if stamp.get("data_fingerprint") != current:
+        return "stale", (
+            "**These results are from a DIFFERENT file than the one you uploaded.** "
+            f"Last analysis ran at {stamp.get('completed_at', 'an unknown time')}. "
+            "Click 'Run Full Pipeline' to analyse your uploaded data."
+        )
+
+    return "current", f"Results match your uploaded data (analysed {stamp.get('completed_at', '')})."
+
+
+def file_key(path):
+    """Cache key that changes whenever a file changes on disk."""
+    path = Path(path)
+    if not path.exists():
+        return None
+    stat = path.stat()
+    return (str(path), stat.st_mtime_ns, stat.st_size)
 
 
 def safe_text(value):
@@ -219,40 +298,50 @@ def recreate_synopsis_mapping():
 # ---------------------------------------------------------------------------
 # Data loaders
 # ---------------------------------------------------------------------------
+# NOTE: these loaders are cached on a key derived from the file's modification
+# time and size (see file_key). Previously they were cached with no arguments at
+# all, which meant Streamlit kept serving the FIRST results it ever read even
+# after the pipeline rewrote the CSVs on disk.
 @st.cache_data
+def _read_csv_cached(path_str, _key):
+    return pd.read_csv(path_str)
+
+
+@st.cache_data
+def _read_excel_cached(path_str, _key):
+    return pd.read_excel(path_str)
+
+
+def _load_csv(path):
+    path = Path(path)
+    if not path.exists():
+        return None
+    return _read_csv_cached(str(path), file_key(path))
+
+
 def load_workbook_overview():
-    path = OUTPUTS_DIR / "exploration" / "workbook_overview.csv"
-    return pd.read_csv(path) if path.exists() else None
+    return _load_csv(OUTPUTS_DIR / "exploration" / "workbook_overview.csv")
 
 
-@st.cache_data
 def load_all_results():
-    path = OUTPUTS_DIR / "descriptive_results" / "all_descriptive_results.csv"
-    return pd.read_csv(path) if path.exists() else None
+    return _load_csv(OUTPUTS_DIR / "descriptive_results" / "all_descriptive_results.csv")
 
 
-@st.cache_data
 def load_question_summary():
-    path = OUTPUTS_DIR / "descriptive_results" / "question_level_summary.csv"
-    return pd.read_csv(path) if path.exists() else None
+    return _load_csv(OUTPUTS_DIR / "descriptive_results" / "question_level_summary.csv")
 
 
-@st.cache_data
 def load_validation_status():
-    path = OUTPUTS_DIR / "validation" / "validation_status_summary.csv"
-    return pd.read_csv(path) if path.exists() else None
+    return _load_csv(OUTPUTS_DIR / "validation" / "validation_status_summary.csv")
 
 
-@st.cache_data
 def load_validation_actions():
-    path = OUTPUTS_DIR / "validation" / "validation_action_list.csv"
-    return pd.read_csv(path) if path.exists() else None
+    return _load_csv(OUTPUTS_DIR / "validation" / "validation_action_list.csv")
 
 
-@st.cache_data
 def load_mapping():
     if MAPPING_FILE.exists():
-        return pd.read_excel(MAPPING_FILE)
+        return _read_excel_cached(str(MAPPING_FILE), file_key(MAPPING_FILE))
     return pd.DataFrame(
         columns=[
             "objective",
@@ -336,26 +425,58 @@ def main():
         st.header("1. Upload Data")
         uploaded_file = st.file_uploader("Upload Surveys.xlsx", type=["xlsx"])
 
+        auto_run = st.checkbox(
+            "Analyse automatically after upload",
+            value=True,
+            help="Uploading only replaces the data file. The results tabs are built "
+                 "from the last analysis run, so new data must be re-analysed before "
+                 "the numbers change.",
+        )
+
         if uploaded_file is not None:
-            # Backup existing file if it is not the same as the uploaded one
-            if DEFAULT_EXCEL.exists():
-                backup_path = PROJECT_DIR / "Surveys_original_backup.xlsx"
-                import shutil
-                shutil.copy2(DEFAULT_EXCEL, backup_path)
-            save_path = DEFAULT_EXCEL
-            with open(save_path, "wb") as f:
-                f.write(uploaded_file.getbuffer())
-            st.success(f"Saved as {save_path.name}. Original backed up to Surveys_original_backup.xlsx")
-        else:
-            save_path = DEFAULT_EXCEL if DEFAULT_EXCEL.exists() else None
+            incoming = hashlib.md5(uploaded_file.getbuffer()).hexdigest()
+            is_new_file = incoming != data_fingerprint()
+
+            if is_new_file:
+                if DEFAULT_EXCEL.exists():
+                    import shutil
+                    shutil.copy2(DEFAULT_EXCEL, PROJECT_DIR / "Surveys_original_backup.xlsx")
+                with open(DEFAULT_EXCEL, "wb") as f:
+                    f.write(uploaded_file.getbuffer())
+                # Results on screen were built from the previous file; drop them.
+                st.cache_data.clear()
+                st.success(f"Saved {uploaded_file.name} as Surveys.xlsx")
+
+                if auto_run:
+                    with st.spinner("Analysing your uploaded data..."):
+                        if run_analysis_pipeline():
+                            write_pipeline_stamp()
+                            st.cache_data.clear()
+                            st.success("Analysis complete - results below reflect your upload.")
+                            st.rerun()
+                        else:
+                            st.error("Pipeline failed. See the error above.")
+                else:
+                    st.warning("Now click 'Run Full Pipeline' to update the results.")
+
+        save_path = DEFAULT_EXCEL if DEFAULT_EXCEL.exists() else None
 
         st.divider()
         st.header("2. Run Analysis")
+
+        state, message = results_status()
+        if state == "current":
+            st.caption(f"Up to date. {message}")
+        else:
+            st.warning(message)
+
         if st.button("🚀 Run Full Pipeline", use_container_width=True):
             with st.spinner("Running analysis... please wait"):
                 if run_analysis_pipeline():
-                    st.success("Pipeline completed successfully!")
+                    write_pipeline_stamp()
                     st.cache_data.clear()
+                    st.success("Pipeline completed successfully!")
+                    st.rerun()
                 else:
                     st.error("Pipeline failed. Check error message above.")
 
@@ -415,6 +536,21 @@ def main():
             "💡 **Tip:** If you change the question mapping in the app, click "
             "'Save Mapping' before generating the report."
         )
+
+    # -----------------------------------------------------------------------
+    # Staleness banner
+    #
+    # Every results tab below is built from outputs/, NOT from the uploaded
+    # workbook directly. If the two disagree the numbers on screen belong to a
+    # different dataset, which is impossible to notice by eye. Say so loudly.
+    # -----------------------------------------------------------------------
+    banner_state, banner_message = results_status()
+    if banner_state == "stale":
+        st.error(f"⚠️ {banner_message}", icon="🚨")
+    elif banner_state == "no_results":
+        st.info(f"{banner_message} Click 'Run Full Pipeline' in the sidebar.")
+    elif banner_state == "no_data":
+        st.info(banner_message)
 
     # -----------------------------------------------------------------------
     # Tabs
