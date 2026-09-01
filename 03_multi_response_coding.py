@@ -155,9 +155,18 @@ def code_difficulties(row):
     rows = []
     text = key_text(row["response_clean"])
 
-    if has_any(text, [r"not mentioned", r"do not know", r"nothing special", r"\bsame\b"]):
+    # "no difficulty" must be tested before anything else, otherwise a
+    # respondent who reports no problem is silently dropped from the table.
+    if has_any(text, [r"\bno difficulty\b", r"\bno problem\b", r"not mentioned",
+                      r"do not know", r"nothing special", r"\bsame\b"]):
         add_indicator(rows, row, "difficulty_none_unsure", "None/unsure/not specified", row["response_clean"], "coded_difficulty")
-    if has_any(text, [r"men don'?t listen", r"village men", r"patriarch", r"male"]):
+        return rows
+
+    # NOTE on "Lack of Support from Men": this is the most common answer in the
+    # General Public sheet. It must be counted as a men/patriarchy difficulty.
+    # The family/husband rule below therefore no longer matches a bare "support",
+    # which used to swallow this answer into the wrong category.
+    if has_any(text, [r"men don'?t listen", r"village men", r"\bmen\b", r"patriarch", r"\bmale\b"]):
         add_indicator(rows, row, "difficulty_men_patriarchy", "Men do not listen/patriarchy", row["response_clean"], "coded_difficulty")
     if has_any(text, [r"housework", r"houshold", r"household", r"dual burden"]):
         add_indicator(rows, row, "difficulty_household_work", "Household work/dual burden", row["response_clean"], "coded_difficulty")
@@ -165,7 +174,7 @@ def code_difficulties(row):
         add_indicator(rows, row, "difficulty_officials_not_serious", "Officials do not take seriously/cooperate", row["response_clean"], "coded_difficulty")
     if has_any(text, [r"traditional", r"pradhan", r"powerfull", r"powerful"]):
         add_indicator(rows, row, "difficulty_traditional_power", "Traditional Pradhan power", row["response_clean"], "coded_difficulty")
-    if has_any(text, [r"family", r"husband", r"permission", r"support"]):
+    if has_any(text, [r"\bfamily\b", r"husband", r"permission", r"in laws", r"relatives"]):
         add_indicator(rows, row, "difficulty_family_husband", "Family/husband permission or support", row["response_clean"], "coded_difficulty")
     if has_any(text, [r"\bother", r"others"]):
         add_indicator(rows, row, "difficulty_other", "Other difficulty", row["response_clean"], "coded_difficulty")
@@ -312,6 +321,19 @@ def code_agriculture_techniques(row):
 indicator_rows = []
 unmatched_selected_rows = []
 
+# Question-text fragments that identify a multi-response question. Used both to
+# dispatch a coder and to decide whether an unmatched response deserves an
+# explicit "Uncoded" indicator.
+MULTI_RESPONSE_QUESTION_KEYS = {
+    "how do you get info on schemes",
+    "how do you contact mukhiya",
+    "biggest difficulty",
+    "kharif crops",
+    "rabi crops",
+    "livestock",
+    "best technique",
+}
+
 for _, row in analysis_rows.iterrows():
     question_key = key_text(row["Question"])
     row_indicators = []
@@ -330,6 +352,16 @@ for _, row in analysis_rows.iterrows():
         row_indicators = code_livestock(row)
     elif "best technique" in question_key:
         row_indicators = code_agriculture_techniques(row)
+
+    # SAFETY NET: if a response belongs to a multi-response question but matched
+    # no rule, record it explicitly as "Uncoded" rather than dropping it. Without
+    # this, counts quietly fall short of the denominator and the gap only shows
+    # up as a validation warning that is easy to miss.
+    if row_indicators is not None and len(row_indicators) == 0 and any(k in question_key for k in MULTI_RESPONSE_QUESTION_KEYS):
+        add_indicator(
+            row_indicators, row, "uncoded_response",
+            "Uncoded - needs manual review", row["response_clean"], "coded_uncoded",
+        )
 
     indicator_rows.extend(row_indicators)
 

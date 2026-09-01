@@ -123,30 +123,36 @@ else:
     MAPPING_CSV.parent.mkdir(parents=True, exist_ok=True)
     mapping_df.to_csv(MAPPING_CSV, index=False)
 
-# Expand matrix parent questions into their corrected sub-items
-matrix_expansions = {
-    ("Women Representative", "19"): ["19.1", "19.2", "19.3", "19.4"],
-    ("Women Representative", "21"): ["21.1", "21.2", "21.3", "21.4", "21.5", "21.6", "21.7"],
-    ("Women Representative", "23"): ["23.1", "23.2", "23.3", "23.4"],
-}
-expanded_rows = []
-for _, row in mapping_df.iterrows():
-    key = (row["respondent_group"], row["question_no"])
-    if key in matrix_expansions:
-        for sub in matrix_expansions[key]:
-            expanded_rows.append({
-                "respondent_group": row["respondent_group"],
-                "question_no": sub,
-                "objective": row["objective"],
-                "hypothesis": row["hypothesis"],
-            })
-    else:
-        expanded_rows.append(row.to_dict())
-mapping_df = pd.DataFrame(expanded_rows)
+# NOTE: matrix sub-items no longer need expanding. In the current workbook each
+# sub-item already has its own Question No (involvement = Q19-Q22,
+# challenges = Q24-Q31, change-since = Q33-Q36), so they are mapped directly in
+# config/question_hypothesis_mapping.csv like any other question.
 
-q_summary["question_no_str"] = q_summary["question_no"].apply(
-    lambda x: str(int(x)) if pd.notna(x) and x == int(x) else str(x)
-)
+def as_question_key(value):
+    """Normalize a question number to a comparable string ('19', '19a')."""
+    if pd.isna(value):
+        return ""
+    text = str(value).strip()
+    if text.endswith(".0"):
+        text = text[:-2]
+    return text
+
+
+q_summary["question_no_str"] = q_summary["question_no"].map(as_question_key)
+mapping_df["question_no"] = mapping_df["question_no"].map(as_question_key)
+
+# Warn about mapping entries that no longer match any question in the data.
+available = set(zip(q_summary["respondent_group"], q_summary["question_no_str"]))
+unmatched = [
+    f"{g} Q{q}"
+    for g, q in zip(mapping_df["respondent_group"], mapping_df["question_no"])
+    if (g, q) not in available
+]
+if unmatched:
+    print(f"WARNING: {len(set(unmatched))} mapped questions have no results:")
+    for item in sorted(set(unmatched)):
+        print(f"  - {item}")
+    print("  (Question numbers may have shifted; update config/question_hypothesis_mapping.csv)")
 # Drop the original numeric question_no from q_summary to avoid column name collisions
 q_summary = q_summary.drop(columns=["question_no"])
 merged = mapping_df.merge(

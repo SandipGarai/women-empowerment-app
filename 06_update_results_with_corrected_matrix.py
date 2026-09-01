@@ -19,17 +19,19 @@ QUESTION_SUMMARY_PATH = RESULTS_DIR / "question_level_summary.csv"
 TABLE_INDEX_PATH = RESULTS_DIR / "table_index.csv"
 
 MATRIX_FREQ_PATH = MATRIX_DIR / "matrix_frequency_corrected.csv"
+MATRIX_HANDLED_PATH = MATRIX_DIR / "matrix_handled_questions.csv"
 MATRIX_SUMMARY_PATH = MATRIX_DIR / "matrix_question_summary.csv"
 
 
 # %%
 # Step 2: Load data
 
-all_results = pd.read_csv(ALL_RESULTS_PATH)
-q_summary = pd.read_csv(QUESTION_SUMMARY_PATH)
-table_index = pd.read_csv(TABLE_INDEX_PATH)
-matrix_freq = pd.read_csv(MATRIX_FREQ_PATH)
-matrix_summary = pd.read_csv(MATRIX_SUMMARY_PATH)
+all_results = pd.read_csv(ALL_RESULTS_PATH, dtype={"question_no": str})
+q_summary = pd.read_csv(QUESTION_SUMMARY_PATH, dtype={"question_no": str})
+table_index = pd.read_csv(TABLE_INDEX_PATH, dtype={"question_no": str})
+matrix_freq = pd.read_csv(MATRIX_FREQ_PATH, dtype={"question_no": str})
+matrix_summary = pd.read_csv(MATRIX_SUMMARY_PATH, dtype={"question_no": str})
+matrix_handled = pd.read_csv(MATRIX_HANDLED_PATH, dtype={"question_no": str})
 
 print(f"Original all_results rows: {len(all_results):,}")
 print(f"Original question_summary rows: {len(q_summary):,}")
@@ -39,6 +41,9 @@ print(f"Corrected matrix summary rows: {len(matrix_summary):,}")
 
 # %%
 # Step 3: Convert corrected matrix frequency to all_descriptive_results format
+#
+# Theme and section now come from script 05 rather than from hard-coded
+# question-number prefixes, so renumbering the workbook no longer breaks this.
 
 matrix_results = matrix_freq.copy()
 matrix_results["result_type"] = matrix_results["response_type"].map(
@@ -48,31 +53,14 @@ matrix_results["result_type"] = matrix_results["response_type"].map(
     }
 )
 
-# Assign theme based on question number
-q19_items = matrix_results["question_no"].astype(str).str.startswith("19.")
-q21_items = matrix_results["question_no"].astype(str).str.startswith("21.")
-q23_items = matrix_results["question_no"].astype(str).str.startswith("23.")
-
-matrix_results["theme"] = ""
-matrix_results.loc[q19_items, "theme"] = "Women Empowerment and Panchayat Participation"
-matrix_results.loc[q21_items, "theme"] = "Challenges and Constraints"
-matrix_results.loc[q23_items, "theme"] = "Women Empowerment and Panchayat Participation"
-
-matrix_results["section"] = "Section B" if q19_items.any() else "Section C" if q21_items.any() else "Section D"
 matrix_results["particular"] = ""
 matrix_results["answer_code"] = matrix_results["answer"]
 
 # Create table_id
 matrix_results["table_id"] = matrix_results.apply(
-    lambda row: f"{'sm' if row['response_type'] == 'scale' else 'cm'}_women_representative_q{row['question_no']}",
+    lambda row: f"{'sm' if row['response_type'] == 'scale' else 'cm'}"
+                f"_{row['respondent_group'].lower().replace(' ', '_')}_q{row['question_no']}",
     axis=1,
-)
-
-matrix_results = matrix_results.rename(
-    columns={
-        "answer": "answer",
-        "percent_of_respondents": "percent_of_respondents",
-    }
 )
 
 matrix_results = matrix_results[
@@ -97,15 +85,19 @@ matrix_results = matrix_results[
 # %%
 # Step 4: Remove old broken matrix entries and append corrected ones
 
-MATRIX_QUESTION_NOS = [19, 21, 23]
+# The exact (respondent_group, question_no) pairs handled by script 05.
+HANDLED_PAIRS = set(zip(matrix_handled["respondent_group"], matrix_handled["question_no"].astype(str)))
 
-# Remove old broken rows for Women Representative Q19, Q21, Q23
-clean_results = all_results[
-    ~(
-        (all_results["respondent_group"] == "Women Representative")
-        & (pd.to_numeric(all_results["question_no"], errors="coerce").isin(MATRIX_QUESTION_NOS))
-    )
-].copy()
+print(f"Matrix questions taken over by script 05: {len(HANDLED_PAIRS)}")
+
+
+def is_handled(frame):
+    """True where a row was replaced by the matrix-corrected version."""
+    pairs = zip(frame["respondent_group"], frame["question_no"].astype(str))
+    return pd.Series([pair in HANDLED_PAIRS for pair in pairs], index=frame.index)
+
+
+clean_results = all_results[~is_handled(all_results)].copy()
 
 print(f"Rows after removing old matrix entries: {len(clean_results):,}")
 
@@ -122,31 +114,15 @@ print(f"Rows after adding corrected matrix entries: {len(updated_results):,}")
 # %%
 # Step 5: Update question-level summary
 
-clean_q_summary = q_summary[
-    ~(
-        (q_summary["respondent_group"] == "Women Representative")
-        & (pd.to_numeric(q_summary["question_no"], errors="coerce").isin(MATRIX_QUESTION_NOS))
-    )
-].copy()
+clean_q_summary = q_summary[~is_handled(q_summary)].copy()
 
+# theme/section already carried through from script 05
 matrix_summary_for_q = matrix_summary.copy()
 matrix_summary_for_q["table_id"] = matrix_summary_for_q.apply(
-    lambda row: f"{'sm' if row['result_type'] == 'scale_matrix' else 'cm'}_women_representative_q{row['question_no']}",
+    lambda row: f"{'sm' if row['result_type'] == 'scale_matrix' else 'cm'}"
+                f"_{row['respondent_group'].lower().replace(' ', '_')}_q{row['question_no']}",
     axis=1,
 )
-matrix_summary_for_q["theme"] = ""
-matrix_summary_for_q.loc[
-    matrix_summary_for_q["question_no"].astype(str).str.startswith("19."),
-    "theme",
-] = "Women Empowerment and Panchayat Participation"
-matrix_summary_for_q.loc[
-    matrix_summary_for_q["question_no"].astype(str).str.startswith("21."),
-    "theme",
-] = "Challenges and Constraints"
-matrix_summary_for_q.loc[
-    matrix_summary_for_q["question_no"].astype(str).str.startswith("23."),
-    "theme",
-] = "Women Empowerment and Panchayat Participation"
 
 updated_q_summary = pd.concat([clean_q_summary, matrix_summary_for_q], ignore_index=True)
 updated_q_summary = updated_q_summary.sort_values(
@@ -159,12 +135,7 @@ print(f"Updated question_summary rows: {len(updated_q_summary):,}")
 # %%
 # Step 6: Update table index
 
-clean_table_index = table_index[
-    ~(
-        (table_index["respondent_group"] == "Women Representative")
-        & (pd.to_numeric(table_index["question_no"], errors="coerce").isin(MATRIX_QUESTION_NOS))
-    )
-].copy()
+clean_table_index = table_index[~is_handled(table_index)].copy()
 
 # Build new table index rows from updated results
 new_table_index = (
@@ -208,7 +179,7 @@ if validation_status_path.exists():
     validation_status.loc[
         validation_status["check"] == "High-severity count logic errors",
         "note",
-    ] = "Matrix questions Q19, Q21, Q23 have been restructured into sub-items."
+    ] = "Matrix sub-items are grouped and summarised by 05_restructure_matrix_questions.py."
     validation_status.loc[
         validation_status["check"] == "Matrix questions need restructuring",
         "status",

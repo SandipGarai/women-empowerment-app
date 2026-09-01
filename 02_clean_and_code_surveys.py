@@ -70,6 +70,44 @@ for sheet_name, df in survey_sheets.items():
 
 survey_long = pd.concat(long_tables, ignore_index=True)
 
+
+# --- Normalize "Question No" -------------------------------------------------
+# The workbook sometimes contains sub-numbered questions typed as text
+# (e.g. "19 a", "19b" in the Traditional Leader sheet) and fully blank spacer
+# rows. Mixed text/number values turn the whole column into text, which silently
+# breaks any later filter that compares against integers.
+# We therefore build two clean columns:
+#   question_no_label -> canonical display label, e.g. "19", "19a"
+#   question_no_base  -> the numeric part as a float, e.g. 19.0 (for filtering)
+
+def canonical_question_no(value):
+    """Return a tidy display label for a Question No cell."""
+    if pd.isna(value):
+        return ""
+    text = re.sub(r"\s+", "", str(value)).strip()
+    # Turn "19.0" (Excel float) into "19"
+    match = re.fullmatch(r"(\d+)\.0+", text)
+    if match:
+        return match.group(1)
+    return text
+
+
+def base_question_no(value):
+    """Return the leading number of a Question No cell, or NaN."""
+    label = canonical_question_no(value)
+    match = re.match(r"(\d+)", label)
+    return float(match.group(1)) if match else float("nan")
+
+
+survey_long["Question No"] = survey_long["Question No"].map(canonical_question_no)
+survey_long["question_no_base"] = survey_long["Question No"].map(base_question_no)
+
+# Drop spacer rows that carry neither a question number nor question text.
+blank_rows = survey_long["Question No"].eq("") & survey_long["Question"].isna()
+if blank_rows.any():
+    print(f"Dropped {int(blank_rows.sum()):,} blank spacer rows with no question number or text")
+    survey_long = survey_long[~blank_rows].copy()
+
 # Keep only nonblank responses for coding.
 survey_clean = survey_long.dropna(subset=["response_raw"]).copy()
 
@@ -126,9 +164,19 @@ def contains_any(text, words):
 # from analytical frequency tables. We use exact or short-phrase matching so that
 # substantive questions about Panchayat/Gram Sabha meetings are not excluded.
 
-profile_keywords = [
-    "name",
-    "who the mukhiya",
+# Personal identifiers to exclude from analysis.
+#
+# These are matched as WHOLE PHRASES, not substrings. A bare "name" substring
+# used to also catch "Names of Crops Sown in Kharif Season", silently deleting
+# the crop data for Women Representatives and Traditional Leaders.
+#
+# "Do you know who the Mukhiya is?" was previously excluded here too. It is not
+# an identifier - it is a substantive awareness question mapped to Objective 1 -
+# so it is now analysed like any other question.
+profile_name_patterns = [
+    r"^name\b",          # "Name (Optional)", "Name:"
+    r"^respondent name",
+    r"^full name",
 ]
 
 # Location identifiers are usually single-word questions (Village, Panchayat, etc.)
@@ -145,8 +193,8 @@ profile_whole_phrases = [
 def is_profile_or_identifier_question(question_text):
     """Return True if the question is a profile/identifier field."""
     text = str(question_text).lower().strip()
-    # Keyword substrings (e.g., "Name (Optional)")
-    if contains_any(text, profile_keywords):
+    # Name fields, anchored to the start so "Names of Crops..." is NOT caught.
+    if any(re.match(pattern, text) for pattern in profile_name_patterns):
         return True
     # Whole-word/short phrase identifiers: question text is essentially just
     # the location word, optionally with "(Optional)" or punctuation.

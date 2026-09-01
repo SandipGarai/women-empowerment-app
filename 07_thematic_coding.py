@@ -220,7 +220,7 @@ THEMATIC_RULES = [
     # ----------------- Women Representative -----------------
     {
         "respondent_group": "Women Representative",
-        "question_no": 22,
+        "question_no": 32,
         "question_contains": "biggest challenge",
         "themes": [
             ("Confidence/acceptance", [r"confidence", r"people", r"accept", r"trust", r"belief"]),
@@ -275,7 +275,7 @@ THEMATIC_RULES = [
     },
     {
         "respondent_group": "Traditional Leader",
-        "question_no": 20,
+        "question_no": 22,
         "question_contains": "actual decisions",
         "themes": [
             ("Yes, proxy exists", [r"__STARTS_WITH_YES__", r"interference", r"husband", r"taken by"]),
@@ -357,25 +357,57 @@ display(high_frag.head(20))
 coded_rows = []
 review_rows = []
 
+# Denominators are recorded while coding so later steps never have to re-derive
+# them from a question number that may have shifted in the workbook.
+question_denominators = {}
+
 for rule in THEMATIC_RULES:
     group = rule["respondent_group"]
-    q_no = rule["question_no"]
     q_contains = rule["question_contains"]
     themes = rule["themes"]
 
-    # Select rows for this question
+    # Match on the question TEXT, not the question number.
+    # Question numbers get reshuffled whenever the workbook is edited; the
+    # wording is far more stable. The number is then READ BACK from the data,
+    # so outputs always carry whatever number the workbook currently uses.
     mask = (
         (coding_pool["respondent_group"] == group)
-        & (coding_pool["Question No"] == q_no)
         & (coding_pool["question_key"].str.contains(q_contains, regex=False))
     )
     question_rows = coding_pool[mask].copy()
 
     if len(question_rows) == 0:
-        print(f"No rows found for {group} Q{q_no} ({q_contains})")
+        print(f"No rows found for {group} ({q_contains}) - check the wording in THEMATIC_RULES")
         continue
 
+    # A text fragment can match more than one question (e.g. "biggest challenge"
+    # matches both "What is the biggest challenge you face?" and "What are the
+    # biggest challenges you face in using ICTs?"). When that happens, keep the
+    # question whose number is closest to the one declared in the rule, and say
+    # so, rather than silently pooling two different questions together.
+    candidates = question_rows[["Question No", "Question"]].drop_duplicates()
+
+    if len(candidates) > 1:
+        def distance(question_no):
+            digits = re.match(r"(\d+)", str(question_no))
+            if not digits:
+                return 999
+            return abs(int(digits.group(1)) - int(rule["question_no"]))
+
+        chosen = min(candidates["Question No"], key=distance)
+        rejected = [q for q in candidates["Question No"] if q != chosen]
+        print(
+            f"  AMBIGUOUS: {group} '{q_contains}' matched Q{', Q'.join(map(str, candidates['Question No']))}"
+            f" -> using Q{chosen}, ignoring Q{', Q'.join(map(str, rejected))}"
+        )
+        question_rows = question_rows[question_rows["Question No"] == chosen].copy()
+
+    q_no = str(question_rows["Question No"].iloc[0])
+    if str(rule["question_no"]) != q_no:
+        print(f"  NOTE: {group} '{q_contains}' is now Q{q_no} (rule says Q{rule['question_no']})")
+
     question_text = question_rows["Question"].iloc[0]
+    question_denominators[(group, q_no, question_text)] = question_rows["respondent_id"].nunique()
     print(f"\nCoding {group} Q{q_no}: {question_text[:80]}... ({len(question_rows)} responses)")
 
     # Apply rules to each response
@@ -438,18 +470,11 @@ theme_frequencies = []
 for (group, q_no, question, theme), group_df in coded_df.groupby(
     ["respondent_group", "question_no", "question", "theme"], dropna=False
 ):
-    # Denominator = number of respondents who answered this question
-    rule_match = next(
-        (r for r in THEMATIC_RULES if r["respondent_group"] == group and r["question_no"] == q_no),
-        None,
-    )
-    if rule_match is None:
+    # Denominator = number of respondents who answered this question,
+    # recorded during coding above.
+    denominator = question_denominators.get((group, str(q_no), question))
+    if not denominator:
         continue
-    denominator = coding_pool[
-        (coding_pool["respondent_group"] == group)
-        & (coding_pool["Question No"] == q_no)
-        & (coding_pool["question_key"].str.contains(rule_match["question_contains"], regex=False))
-    ]["respondent_id"].nunique()
 
     theme_frequencies.append({
         "respondent_group": group,

@@ -1,4 +1,18 @@
 respondent_group,question_no,objective,hypothesis
+General Public,5,Obj 1: 73rd Amendment impact on representation & participation,H1: 73rd Amendment increased representation/participation → empowerment
+General Public,6,Obj 1: 73rd Amendment impact on representation & participation,H1: 73rd Amendment increased representation/participation → empowerment
+Govt Officials,15,Obj 1: 73rd Amendment impact on representation & participation,H1: 73rd Amendment increased representation/participation → empowerment
+Govt Officials,20,Obj 1: 73rd Amendment impact on representation & participation,H1: 73rd Amendment increased representation/participation → empowerment
+Mahila Mukhiya,14,Obj 1: 73rd Amendment impact on representation & participation,H1: 73rd Amendment increased representation/participation → empowerment
+Mahila Mukhiya,15,Obj 1: 73rd Amendment impact on representation & participation,H1: 73rd Amendment increased representation/participation → empowerment
+Mahila Mukhiya,17,Obj 1: 73rd Amendment impact on representation & participation,H1: 73rd Amendment increased representation/participation → empowerment
+Mahila Mukhiya,20,Obj 1: 73rd Amendment impact on representation & participation,H1: 73rd Amendment increased representation/participation → empowerment
+Mahila Mukhiya,25,Obj 1: 73rd Amendment impact on representation & participation,H1: 73rd Amendment increased representation/participation → empowerment
+Traditional Leader,15,Obj 1: 73rd Amendment impact on representation & participation,H1: 73rd Amendment increased representation/participation → empowerment
+Traditional Leader,16,Obj 1: 73rd Amendment impact on representation & participation,H1: 73rd Amendment increased representation/participation → empowerment
+Traditional Leader,17,Obj 1: 73rd Amendment impact on representation & participation,H1: 73rd Amendment increased representation/participation → empowerment
+Traditional Leader,21,Obj 1: 73rd Amendment impact on representation & participation,H1: 73rd Amendment increased representation/participation → empowerment
+Traditional Leader,22,Obj 1: 73rd Amendment impact on representation & participation,H1: 73rd Amendment increased representation/participation → empowerment
 Women Representative,2,Obj 1: 73rd Amendment impact on representation & participation,H1: 73rd Amendment increased representation/participation → empowerment
 Women Representative,14,Obj 1: 73rd Amendment impact on representation & participation,H1: 73rd Amendment increased representation/participation → empowerment
 Women Representative,15,Obj 1: 73rd Amendment impact on representation & participation,H1: 73rd Amendment increased representation/participation → empowerment
@@ -7,48 +21,93 @@ Women Representative,17,Obj 1: 73rd Amendment impact on representation & partici
 Women Representative,18,Obj 1: 73rd Amendment impact on representation & participation,H1: 73rd Amendment increased representation/participation → empowerment
 Women Representative,19,Obj 1: 73rd Amendment impact on representation & participation,H1: 73rd Amendment increased representation/participation → empowerment
 Women Representative,20,Obj 1: 73rd Amendment impact on representation & participation,H1: 73rd Amendment increased representation/participation → empowerment
-Mahila Mukhiya,2,Obj 1: 73rd Amendment impact on representation & participation,H1: 73rd Amendment increased representation/participation → empowerment
-Mahila Mukhiya,15,Obj 1: 73rd Amendment impact on representation & participation,H1: 73rd Amendment increased representation/participation → empowerment
-Mahila Mukhiya,17,Obj 1: 73rd Amendment impact on representation & participation,H1: 73rd Amendment increased representation/participation → empowerment
-Govt Officials,15,Obj 1: 73rd Amendment impact on representation & participation,H1: 73rd Amendment increased representation/participation → empowerment
-Govt Officials,20,Obj 1: 73rd Amendment impact on representation & participation,H1: 73rd Amendment increased representation/participation → empowerment
-Traditional Leader,15,Obj 1: 73rd Amendment impact on representation & participation,H1: 73rd Amendment increased representation/participation → empowerment
-Traditional Leader,16,Obj 1: 73rd Amendment impact on representation & participation,H1: 73rd Amendment increased representation/participation → empowerment
-Traditional Leader,20,Obj 1: 73rd Amendment impact on representation & participation,H1: 73rd Amendment increased representation/participation → empowerment
-Women Representative,21,Obj 2: Effectiveness of capacity building initiatives,H2: Capacity building enhances participation & empowerment
-Women Representative,22,Obj 2: Effectiveness of capacity building initiatives,H2: Capacity building enhances participation & empowerment
-Women Representative,33,Obj 2: Effectiveness of capacity building initiatives,H2: Capacity building enhances participation & empowerment
+Women Representative,21,Obj 1: 73rd Amendment impact on representation & participation,H1: 73rd Amendment increased representation/participation → empowerment
+Women Representative,22,Obj 1: 73rd Amendment impact on representation & participation,H1: 73rd Amendment increased representation/participation → empowerment
+Women Representative,23,Obj 1: 73rd Amendment impact on representation & participation,H1: 73rd Amendment increased representation/participation → empowerment
+Women Representative,24,Obj 1: 73rd Amendment impact on representation & participation,H1: 73rd Amendment increased representation/participation → empowerment
+Women Representative,25,Obj 1: 73rd Amendment impact on representation & participation,H1: 73rd Amendment increased representation/participation → empowerment
+Women Representative,26,Obj 1: 73rd Amendment impact on representation & participation,H1: 73rd Amendment increased representation/participation → empowerment
+Women Representative,27,Obj 1: 73rd Amendment impact on representation & participation,H1: 73rd Amendment increased representation/participation → empowerment
+Women Representative,28,Obj 1: 73rd Amendment impact on representation & participation,H1: 73rd Amendment increased representation/participation → empowerment
+Women Representative,29,Obj 1: 73rd Amendment impact on representation & participation,H1: 73rd Amendment increased representation/participation → empowerment
+Women Representative,30,Obj 1: 73rd Amendment impact on representation & participation,H1: 73rd Amendment increased representation/participation → empowerment
+Women Representative,31,Obj 1: 73rd Amendment impact on representation & participation,H1: 73rd Amendment increased representation/participation → empowerment
+Women Representative,32,Obj 1: 73rd Amendment impact on representation & participation,H1: 73rd Amendment increased representation/participation → empowerment
 Govt Officials,16,Obj 2: Effectiveness of capacity building initiatives,H2: Capacity building enhances participation & empowerment
+Govt Officials,17,Obj 2: Effectiveness of capacity building initiatives,H2: Capacity building enhances participation & empowerment
+Govt Officials,19,Obj 2: Effectiveness of capacity building initiatives,H2: Capacity building enhances participation & empowerment
 Govt Officials,24,Obj 2: Effectiveness of capacity building initiatives,H2: Capacity building enhances participation & empowerment
 Govt Officials,25,Obj 2: Effectiveness of capacity building initiatives,H2: Capacity building enhances participation & empowerment
-Govt Officials,26,Obj 2: Effectiveness of capacity building initiatives,H2: Capacity building enhances participation & empowerment
 Mahila Mukhiya,24,Obj 2: Effectiveness of capacity building initiatives,H2: Capacity building enhances participation & empowerment
+Women Representative,27,Obj 2: Effectiveness of capacity building initiatives,H2: Capacity building enhances participation & empowerment
+Women Representative,46,Obj 2: Effectiveness of capacity building initiatives,H2: Capacity building enhances participation & empowerment
 General Public,9,Obj 3: Role of ICT in promoting participation,H3: ICT played a crucial role
 General Public,10,Obj 3: Role of ICT in promoting participation,H3: ICT played a crucial role
 General Public,11,Obj 3: Role of ICT in promoting participation,H3: ICT played a crucial role
 General Public,15,Obj 3: Role of ICT in promoting participation,H3: ICT played a crucial role
-Women Representative,29,Obj 3: Role of ICT in promoting participation,H3: ICT played a crucial role
-Women Representative,30,Obj 3: Role of ICT in promoting participation,H3: ICT played a crucial role
-Women Representative,31,Obj 3: Role of ICT in promoting participation,H3: ICT played a crucial role
-Women Representative,32,Obj 3: Role of ICT in promoting participation,H3: ICT played a crucial role
-Women Representative,33,Obj 3: Role of ICT in promoting participation,H3: ICT played a crucial role
-Women Representative,34,Obj 3: Role of ICT in promoting participation,H3: ICT played a crucial role
 Govt Officials,21,Obj 3: Role of ICT in promoting participation,H3: ICT played a crucial role
 Govt Officials,22,Obj 3: Role of ICT in promoting participation,H3: ICT played a crucial role
 Govt Officials,23,Obj 3: Role of ICT in promoting participation,H3: ICT played a crucial role
+Govt Officials,24,Obj 3: Role of ICT in promoting participation,H3: ICT played a crucial role
+Govt Officials,26,Obj 3: Role of ICT in promoting participation,H3: ICT played a crucial role
 Mahila Mukhiya,21,Obj 3: Role of ICT in promoting participation,H3: ICT played a crucial role
 Mahila Mukhiya,22,Obj 3: Role of ICT in promoting participation,H3: ICT played a crucial role
 Mahila Mukhiya,23,Obj 3: Role of ICT in promoting participation,H3: ICT played a crucial role
-Traditional Leader,22,Obj 3: Role of ICT in promoting participation,H3: ICT played a crucial role
-Women Representative,19,Obj 4: Participation → empowerment & community development,H4: Participation contributed to empowerment & community development
-Women Representative,23,Obj 4: Participation → empowerment & community development,H4: Participation contributed to empowerment & community development
-Women Representative,24,Obj 4: Participation → empowerment & community development,H4: Participation contributed to empowerment & community development
+Mahila Mukhiya,24,Obj 3: Role of ICT in promoting participation,H3: ICT played a crucial role
+Traditional Leader,24,Obj 3: Role of ICT in promoting participation,H3: ICT played a crucial role
+Traditional Leader,25,Obj 3: Role of ICT in promoting participation,H3: ICT played a crucial role
+Traditional Leader,26,Obj 3: Role of ICT in promoting participation,H3: ICT played a crucial role
+Traditional Leader,27,Obj 3: Role of ICT in promoting participation,H3: ICT played a crucial role
+Traditional Leader,28,Obj 3: Role of ICT in promoting participation,H3: ICT played a crucial role
+Traditional Leader,29,Obj 3: Role of ICT in promoting participation,H3: ICT played a crucial role
+Traditional Leader,30,Obj 3: Role of ICT in promoting participation,H3: ICT played a crucial role
+Traditional Leader,31,Obj 3: Role of ICT in promoting participation,H3: ICT played a crucial role
+Traditional Leader,32,Obj 3: Role of ICT in promoting participation,H3: ICT played a crucial role
+Traditional Leader,33,Obj 3: Role of ICT in promoting participation,H3: ICT played a crucial role
+Women Representative,42,Obj 3: Role of ICT in promoting participation,H3: ICT played a crucial role
+Women Representative,43,Obj 3: Role of ICT in promoting participation,H3: ICT played a crucial role
+Women Representative,44,Obj 3: Role of ICT in promoting participation,H3: ICT played a crucial role
+Women Representative,45,Obj 3: Role of ICT in promoting participation,H3: ICT played a crucial role
+Women Representative,46,Obj 3: Role of ICT in promoting participation,H3: ICT played a crucial role
+Women Representative,47,Obj 3: Role of ICT in promoting participation,H3: ICT played a crucial role
+General Public,7,Obj 4: Participation → empowerment & community development,H4: Participation contributed to empowerment & community development
+General Public,8,Obj 4: Participation → empowerment & community development,H4: Participation contributed to empowerment & community development
 General Public,12,Obj 4: Participation → empowerment & community development,H4: Participation contributed to empowerment & community development
 General Public,13,Obj 4: Participation → empowerment & community development,H4: Participation contributed to empowerment & community development
 General Public,14,Obj 4: Participation → empowerment & community development,H4: Participation contributed to empowerment & community development
+General Public,16,Obj 4: Participation → empowerment & community development,H4: Participation contributed to empowerment & community development
+General Public,17,Obj 4: Participation → empowerment & community development,H4: Participation contributed to empowerment & community development
 General Public,18,Obj 4: Participation → empowerment & community development,H4: Participation contributed to empowerment & community development
 General Public,19,Obj 4: Participation → empowerment & community development,H4: Participation contributed to empowerment & community development
+Govt Officials,18,Obj 4: Participation → empowerment & community development,H4: Participation contributed to empowerment & community development
+Govt Officials,20,Obj 4: Participation → empowerment & community development,H4: Participation contributed to empowerment & community development
+Govt Officials,26,Obj 4: Participation → empowerment & community development,H4: Participation contributed to empowerment & community development
 Mahila Mukhiya,16,Obj 4: Participation → empowerment & community development,H4: Participation contributed to empowerment & community development
-Mahila Mukhiya,25,Obj 4: Participation → empowerment & community development,H4: Participation contributed to empowerment & community development
+Mahila Mukhiya,17,Obj 4: Participation → empowerment & community development,H4: Participation contributed to empowerment & community development
+Mahila Mukhiya,18,Obj 4: Participation → empowerment & community development,H4: Participation contributed to empowerment & community development
+Mahila Mukhiya,19,Obj 4: Participation → empowerment & community development,H4: Participation contributed to empowerment & community development
 Mahila Mukhiya,26,Obj 4: Participation → empowerment & community development,H4: Participation contributed to empowerment & community development
 Mahila Mukhiya,27,Obj 4: Participation → empowerment & community development,H4: Participation contributed to empowerment & community development
+Mahila Mukhiya,28,Obj 4: Participation → empowerment & community development,H4: Participation contributed to empowerment & community development
+Traditional Leader,18,Obj 4: Participation → empowerment & community development,H4: Participation contributed to empowerment & community development
+Traditional Leader,19,Obj 4: Participation → empowerment & community development,H4: Participation contributed to empowerment & community development
+Traditional Leader,20,Obj 4: Participation → empowerment & community development,H4: Participation contributed to empowerment & community development
+Traditional Leader,21,Obj 4: Participation → empowerment & community development,H4: Participation contributed to empowerment & community development
+Traditional Leader,22,Obj 4: Participation → empowerment & community development,H4: Participation contributed to empowerment & community development
+Traditional Leader,23,Obj 4: Participation → empowerment & community development,H4: Participation contributed to empowerment & community development
+Traditional Leader,27,Obj 4: Participation → empowerment & community development,H4: Participation contributed to empowerment & community development
+Women Representative,19,Obj 4: Participation → empowerment & community development,H4: Participation contributed to empowerment & community development
+Women Representative,20,Obj 4: Participation → empowerment & community development,H4: Participation contributed to empowerment & community development
+Women Representative,21,Obj 4: Participation → empowerment & community development,H4: Participation contributed to empowerment & community development
+Women Representative,22,Obj 4: Participation → empowerment & community development,H4: Participation contributed to empowerment & community development
+Women Representative,23,Obj 4: Participation → empowerment & community development,H4: Participation contributed to empowerment & community development
+Women Representative,29,Obj 4: Participation → empowerment & community development,H4: Participation contributed to empowerment & community development
+Women Representative,33,Obj 4: Participation → empowerment & community development,H4: Participation contributed to empowerment & community development
+Women Representative,34,Obj 4: Participation → empowerment & community development,H4: Participation contributed to empowerment & community development
+Women Representative,35,Obj 4: Participation → empowerment & community development,H4: Participation contributed to empowerment & community development
+Women Representative,36,Obj 4: Participation → empowerment & community development,H4: Participation contributed to empowerment & community development
+Women Representative,37,Obj 4: Participation → empowerment & community development,H4: Participation contributed to empowerment & community development
+Women Representative,38,Obj 4: Participation → empowerment & community development,H4: Participation contributed to empowerment & community development
+Women Representative,39,Obj 4: Participation → empowerment & community development,H4: Participation contributed to empowerment & community development
+Women Representative,40,Obj 4: Participation → empowerment & community development,H4: Participation contributed to empowerment & community development
+Women Representative,41,Obj 4: Participation → empowerment & community development,H4: Participation contributed to empowerment & community development

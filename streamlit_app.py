@@ -139,95 +139,27 @@ def recreate_synopsis_mapping():
         mapping_df = pd.read_csv(mapping_csv)
         mapping_df["question_no"] = mapping_df["question_no"].astype(str)
     else:
-        # Default mapping derived from the offline analysis
-        default_mapping = [
-            # Obj 1
-            ("Women Representative", "2", "Obj 1: 73rd Amendment impact on representation & participation", "H1: 73rd Amendment increased representation/participation → empowerment"),
-            ("Women Representative", "14", "Obj 1: 73rd Amendment impact on representation & participation", "H1: 73rd Amendment increased representation/participation → empowerment"),
-            ("Women Representative", "15", "Obj 1: 73rd Amendment impact on representation & participation", "H1: 73rd Amendment increased representation/participation → empowerment"),
-            ("Women Representative", "16", "Obj 1: 73rd Amendment impact on representation & participation", "H1: 73rd Amendment increased representation/participation → empowerment"),
-            ("Women Representative", "17", "Obj 1: 73rd Amendment impact on representation & participation", "H1: 73rd Amendment increased representation/participation → empowerment"),
-            ("Women Representative", "18", "Obj 1: 73rd Amendment impact on representation & participation", "H1: 73rd Amendment increased representation/participation → empowerment"),
-            ("Women Representative", "19", "Obj 1: 73rd Amendment impact on representation & participation", "H1: 73rd Amendment increased representation/participation → empowerment"),
-            ("Women Representative", "20", "Obj 1: 73rd Amendment impact on representation & participation", "H1: 73rd Amendment increased representation/participation → empowerment"),
-            ("Mahila Mukhiya", "2", "Obj 1: 73rd Amendment impact on representation & participation", "H1: 73rd Amendment increased representation/participation → empowerment"),
-            ("Mahila Mukhiya", "15", "Obj 1: 73rd Amendment impact on representation & participation", "H1: 73rd Amendment increased representation/participation → empowerment"),
-            ("Mahila Mukhiya", "17", "Obj 1: 73rd Amendment impact on representation & participation", "H1: 73rd Amendment increased representation/participation → empowerment"),
-            ("Govt Officials", "15", "Obj 1: 73rd Amendment impact on representation & participation", "H1: 73rd Amendment increased representation/participation → empowerment"),
-            ("Govt Officials", "20", "Obj 1: 73rd Amendment impact on representation & participation", "H1: 73rd Amendment increased representation/participation → empowerment"),
-            ("Traditional Leader", "15", "Obj 1: 73rd Amendment impact on representation & participation", "H1: 73rd Amendment increased representation/participation → empowerment"),
-            ("Traditional Leader", "16", "Obj 1: 73rd Amendment impact on representation & participation", "H1: 73rd Amendment increased representation/participation → empowerment"),
-            ("Traditional Leader", "20", "Obj 1: 73rd Amendment impact on representation & participation", "H1: 73rd Amendment increased representation/participation → empowerment"),
-            # Obj 2
-            ("Women Representative", "21", "Obj 2: Effectiveness of capacity building initiatives", "H2: Capacity building enhances participation & empowerment"),
-            ("Women Representative", "22", "Obj 2: Effectiveness of capacity building initiatives", "H2: Capacity building enhances participation & empowerment"),
-            ("Women Representative", "33", "Obj 2: Effectiveness of capacity building initiatives", "H2: Capacity building enhances participation & empowerment"),
-            ("Govt Officials", "16", "Obj 2: Effectiveness of capacity building initiatives", "H2: Capacity building enhances participation & empowerment"),
-            ("Govt Officials", "24", "Obj 2: Effectiveness of capacity building initiatives", "H2: Capacity building enhances participation & empowerment"),
-            ("Govt Officials", "25", "Obj 2: Effectiveness of capacity building initiatives", "H2: Capacity building enhances participation & empowerment"),
-            ("Govt Officials", "26", "Obj 2: Effectiveness of capacity building initiatives", "H2: Capacity building enhances participation & empowerment"),
-            ("Mahila Mukhiya", "24", "Obj 2: Effectiveness of capacity building initiatives", "H2: Capacity building enhances participation & empowerment"),
-            # Obj 3
-            ("General Public", "9", "Obj 3: Role of ICT in promoting participation", "H3: ICT played a crucial role"),
-            ("General Public", "10", "Obj 3: Role of ICT in promoting participation", "H3: ICT played a crucial role"),
-            ("General Public", "11", "Obj 3: Role of ICT in promoting participation", "H3: ICT played a crucial role"),
-            ("General Public", "15", "Obj 3: Role of ICT in promoting participation", "H3: ICT played a crucial role"),
-            ("Women Representative", "29", "Obj 3: Role of ICT in promoting participation", "H3: ICT played a crucial role"),
-            ("Women Representative", "30", "Obj 3: Role of ICT in promoting participation", "H3: ICT played a crucial role"),
-            ("Women Representative", "31", "Obj 3: Role of ICT in promoting participation", "H3: ICT played a crucial role"),
-            ("Women Representative", "32", "Obj 3: Role of ICT in promoting participation", "H3: ICT played a crucial role"),
-            ("Women Representative", "33", "Obj 3: Role of ICT in promoting participation", "H3: ICT played a crucial role"),
-            ("Women Representative", "34", "Obj 3: Role of ICT in promoting participation", "H3: ICT played a crucial role"),
-            ("Govt Officials", "21", "Obj 3: Role of ICT in promoting participation", "H3: ICT played a crucial role"),
-            ("Govt Officials", "22", "Obj 3: Role of ICT in promoting participation", "H3: ICT played a crucial role"),
-            ("Govt Officials", "23", "Obj 3: Role of ICT in promoting participation", "H3: ICT played a crucial role"),
-            ("Mahila Mukhiya", "21", "Obj 3: Role of ICT in promoting participation", "H3: ICT played a crucial role"),
-            ("Mahila Mukhiya", "22", "Obj 3: Role of ICT in promoting participation", "H3: ICT played a crucial role"),
-            ("Mahila Mukhiya", "23", "Obj 3: Role of ICT in promoting participation", "H3: ICT played a crucial role"),
-            ("Traditional Leader", "22", "Obj 3: Role of ICT in promoting participation", "H3: ICT played a crucial role"),
-            # Obj 4
-            ("Women Representative", "19", "Obj 4: Participation → empowerment & community development", "H4: Participation contributed to empowerment & community development"),
-            ("Women Representative", "23", "Obj 4: Participation → empowerment & community development", "H4: Participation contributed to empowerment & community development"),
-            ("Women Representative", "24", "Obj 4: Participation → empowerment & community development", "H4: Participation contributed to empowerment & community development"),
-            ("General Public", "12", "Obj 4: Participation → empowerment & community development", "H4: Participation contributed to empowerment & community development"),
-            ("General Public", "13", "Obj 4: Participation → empowerment & community development", "H4: Participation contributed to empowerment & community development"),
-            ("General Public", "14", "Obj 4: Participation → empowerment & community development", "H4: Participation contributed to empowerment & community development"),
-            ("General Public", "18", "Obj 4: Participation → empowerment & community development", "H4: Participation contributed to empowerment & community development"),
-            ("General Public", "19", "Obj 4: Participation → empowerment & community development", "H4: Participation contributed to empowerment & community development"),
-            ("Mahila Mukhiya", "16", "Obj 4: Participation → empowerment & community development", "H4: Participation contributed to empowerment & community development"),
-            ("Mahila Mukhiya", "25", "Obj 4: Participation → empowerment & community development", "H4: Participation contributed to empowerment & community development"),
-            ("Mahila Mukhiya", "26", "Obj 4: Participation → empowerment & community development", "H4: Participation contributed to empowerment & community development"),
-            ("Mahila Mukhiya", "27", "Obj 4: Participation → empowerment & community development", "H4: Participation contributed to empowerment & community development"),
-        ]
-
-        mapping_df = pd.DataFrame(
-            default_mapping,
-            columns=["respondent_group", "question_no", "objective", "hypothesis"],
+        # The mapping lives in config/question_hypothesis_mapping.csv so it can
+        # be edited without touching code. A stale copy hard-coded here caused
+        # silent mismatches whenever the workbook was renumbered, so there is
+        # no in-code fallback any more.
+        st.error(
+            "Missing config/question_hypothesis_mapping.csv. "
+            "This file maps each survey question to a synopsis objective and "
+            "hypothesis. Restore it, then reload."
         )
-        mapping_df["question_no"] = mapping_df["question_no"].astype(str)
-        config_dir.mkdir(parents=True, exist_ok=True)
-        mapping_df.to_csv(mapping_csv, index=False)
+        return
 
-    # Expand matrix parent questions into their corrected sub-items
-    matrix_expansions = {
-        ("Women Representative", "19"): ["19.1", "19.2", "19.3", "19.4"],
-        ("Women Representative", "21"): ["21.1", "21.2", "21.3", "21.4", "21.5", "21.6", "21.7"],
-        ("Women Representative", "23"): ["23.1", "23.2", "23.3", "23.4"],
-    }
-    expanded_rows = []
-    for _, row in mapping_df.iterrows():
-        key = (row["respondent_group"], row["question_no"])
-        if key in matrix_expansions:
-            for sub in matrix_expansions[key]:
-                expanded_rows.append({
-                    "respondent_group": row["respondent_group"],
-                    "question_no": sub,
-                    "objective": row["objective"],
-                    "hypothesis": row["hypothesis"],
-                })
-        else:
-            expanded_rows.append(row.to_dict())
-    mapping_df = pd.DataFrame(expanded_rows)
+    # Matrix sub-items now carry their own question numbers in the workbook
+    # (involvement = Q19-Q22, challenges = Q24-Q31, change-since = Q33-Q36),
+    # so no expansion step is needed; they are mapped directly in the config CSV.
+    def as_question_key(value):
+        if pd.isna(value):
+            return ""
+        text = str(value).strip()
+        return text[:-2] if text.endswith(".0") else text
+
+    mapping_df["question_no"] = mapping_df["question_no"].map(as_question_key)
 
     # Prefer thematic coding rows where available (they are the primary result
     # for open-ended questions). Sort so "thematic" comes first, then drop
@@ -809,7 +741,7 @@ def main():
 
             ### Important notes
 
-            - **Matrix questions** (Women Representative Q19, Q21, Q23) are currently flagged
+            - **Matrix questions** (involvement Q19-Q22, challenges Q24-Q31, change-since Q33-Q36) are currently flagged
               because they contain several sub-questions. You may need to restructure them
               before finalizing the report.
             - **"Not mentioned/Do not know"** is a valid response category. It means the

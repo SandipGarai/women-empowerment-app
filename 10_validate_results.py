@@ -455,8 +455,11 @@ if overview_path.exists():
 else:
     overview = pd.DataFrame(columns=["sheet", "respondent_columns"])
 
+# Expected number of respondents per sheet. UPDATE THIS whenever respondents are
+# added to or removed from Surveys.xlsx, otherwise validation reports a false FAIL.
+# Last updated for the 2026-09-01 workbook (General Public grew from 52 to 53).
 expected_counts = {
-    "General Public": 52,
+    "General Public": 53,
     "Govt Officials": 11,
     "Mahila Mukhiya": 8,
     "Traditional Leader": 5,
