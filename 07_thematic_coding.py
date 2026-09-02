@@ -294,8 +294,87 @@ THEMATIC_RULES = [
             ("Mixed/strengths and weaknesses", [r"mixed", r"some", r"both", r"strength", r"weakness"]),
         ],
     },
+    # ------- Added Sept 2026 after fragmentation review -------
+    {
+        "respondent_group": "Mahila Mukhiya",
+        "question_no": 21,
+        "question_contains": "for what purposes do you use your phone",
+        "themes": [
+            ("Faster decisions/problem solving", [r"fast decision", r"problem solving", r"quick"]),
+            ("Official communication/meetings", [r"official", r"online meeting", r"communication", r"meeting"]),
+            ("Getting/updating information", [r"update information", r"information"]),
+        ],
+    },
+    {
+        "respondent_group": "Women Representative",
+        "question_no": 18,
+        "question_contains": "comfortable do you feel speaking",
+        "themes": [
+            ("Fully confident", [r"full confidence", r"very good", r"very comfortable", r"^1$"]),
+            ("Comfortable", [r"comfortable", r"\bgood\b", r"__STARTS_WITH_YES__"]),
+            ("Not comfortable", [r"__STARTS_WITH_NO__", r"hesitat", r"nervous"]),
+        ],
+    },
+    {
+        "respondent_group": "Women Representative",
+        "question_no": 47,
+        "question_contains": "biggest challenges you face in using icts",
+        "themes": [
+            ("Network problems", [r"network"]),
+            ("Cost of data", [r"cost of data", r"expensive", r"data cost"]),
+            ("Do not know how to use apps", [r"not knowing", r"how to use", r"don'?t know"]),
+            ("Harassment on phone", [r"harass"]),
+        ],
+    },
+    {
+        "respondent_group": "Women Representative",
+        "question_no": 41,
+        "question_contains": "which system (gram panchayat or parha",
+        "themes": [
+            ("Both approached", [r"\bboth\b"]),
+            ("Gram Panchayat", [r"gram panchayat"]),
+            ("Parha Panchayat", [r"parha"]),
+        ],
+    },
+    {
+        "respondent_group": "Mahila Mukhiya",
+        "question_no": 20,
+        "question_contains": "how do government officials",
+        "themes": [
+            ("Supportive/respectful", [r"supportive", r"good relationship", r"respect"]),
+            ("Respect but slow response", [r"delay"]),
+            ("Underestimated/not taken seriously", [r"underestimate", r"not serious", r"ignore"]),
+        ],
+    },
+    {
+        "respondent_group": "Traditional Leader",
+        "question_no": 15,
+        "question_contains": "opinion on the policy of reserving seats",
+        "themes": [
+            ("Empowers women", [r"empower"]),
+            ("Increases participation", [r"increased women participation", r"participation"]),
+            ("Opposed: women lack education", [r"lack of education", r"no reservation"]),
+        ],
+    },
+    {
+        "respondent_group": "Traditional Leader",
+        "question_no": 19,
+        "question_contains": "which matters should the gram panchayat handle",
+        "themes": [
+            ("Minor/local village issues only", [r"minor local", r"village level", r"minor"]),
+            ("All matters", [r"all matter"]),
+        ],
+    },
+    {
+        "respondent_group": "Women Representative",
+        "question_no": 23,
+        "question_contains": "opinion is heard and considered by male colleagues",
+        "themes": [
+            ("Yes, opinion is heard", [r"__STARTS_WITH_YES__"]),
+            ("No, opinion is not heard", [r"__STARTS_WITH_NO__"]),
+        ],
+    },
 ]
-
 
 # %%
 # Step 4: Load cleaned responses and apply thematic coding
@@ -304,10 +383,23 @@ analysis_rows = pd.read_csv(CLEANED_ANALYSIS_PATH)
 print(f"Loaded {len(analysis_rows):,} cleaned analysis rows")
 
 # Filter to nonblank, non-profile responses for thematic coding
-profile_keywords = ["name", "village", "panchayat", "block", "district"]
+# Identifier fields to keep out of thematic coding.
+#
+# These used to be matched as SUBSTRINGS, which excluded any question containing
+# the word "panchayat" - 22 substantive questions in total, including most of the
+# Traditional Leader ICT block and "which system do people approach for disputes".
+# A profile field is one whose text is essentially JUST the identifier word, so
+# the patterns are anchored to the start and must cover the whole short label.
+PROFILE_PATTERNS = [
+    r"^name\b",
+    r"^village\s*:?\s*$",
+    r"^panchayat\s*:?\s*$",
+    r"^block\s*:?\s*$",
+    r"^district\s*:?\s*$",
+]
 analysis_rows["question_key"] = analysis_rows["Question"].astype(str).str.lower()
 analysis_rows["is_profile"] = analysis_rows["question_key"].apply(
-    lambda q: any(kw in q for kw in profile_keywords)
+    lambda q: any(re.match(pattern, q.strip()) for pattern in PROFILE_PATTERNS)
 )
 coding_pool = analysis_rows[~analysis_rows["is_profile"]].copy()
 

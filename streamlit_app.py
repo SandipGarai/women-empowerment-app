@@ -610,8 +610,24 @@ def main():
     with tabs[2]:
         st.header("Map Questions to Objectives & Hypotheses")
         st.markdown(
-            "Here you can decide which question belongs to which synopsis objective and hypothesis. "
-            "You can also assign a theme. Changes are saved to a file and used in the report."
+            "Decide which question belongs to which synopsis objective and hypothesis. "
+            "Edit the **Objective** and **Hypothesis** columns, then press **Save Mapping**."
+        )
+        st.info(
+            "**Two ways to edit the mapping — they overwrite each other.**\n\n"
+            "1. **Here in the app.** Edits are written to `config/question_hypothesis_mapping.csv` "
+            "and survive pipeline re-runs. Best for one-off adjustments.\n"
+            "2. **`config/build_question_mapping.py`.** Regenerates the whole CSV from question "
+            "*text*, so it stays correct when questions are renumbered. Best when the questionnaire "
+            "changes.\n\n"
+            "Running the builder script **discards** edits made here. If you want a change to be "
+            "permanent, also add it to `MAPPING_SPEC` inside that script.",
+            icon="ℹ️",
+        )
+        st.caption(
+            "**Finding type**: *Mapped question* = the most common answer from the frequency table. "
+            "*Thematic coding* = a free-text answer grouped into themes by keyword rules in "
+            "`07_thematic_coding.py`. Open-ended questions can show both rows."
         )
 
         mapping_df = load_mapping()

@@ -99,8 +99,8 @@ def code_info_sources(row):
     rows = []
     text = key_text(row["response_clean"])
 
-    # Treat "All" as all core local information channels.
-    if text == "all":
+    # Treat "All"/"All sources" as all core local information channels.
+    if text in {"all", "all sources", "all source", "every source"}:
         for indicator, label in [
             ("info_mukhiya_ward", "Mukhiya/Ward member"),
             ("info_friends_neighbours", "Friends/neighbours"),
@@ -110,7 +110,8 @@ def code_info_sources(row):
             add_indicator(rows, row, indicator, label, "All", "expanded_all_core_channels")
         return rows
 
-    if has_any(text, [r"i don'?t get any information", r"no information"]):
+    if has_any(text, [r"i don'?t get any information", r"no information",
+                      r"^no source", r"^none$", r"^nothing$"]):
         add_indicator(
             rows,
             row,
@@ -238,6 +239,17 @@ def code_rabi_crops(row):
         ("rabi_vegetables", "Vegetables", [r"vegetable"]),
         ("rabi_chilli", "Chilli", [r"chilli", r"chili"]),
         ("rabi_cauliflower", "Cauliflower", [r"caulif"]),
+        # Added after reviewing uncoded responses in the Sept 2026 workbook
+        ("rabi_barley", "Barley/Jau", [r"barley", r"\bjau\b"]),
+        ("rabi_capsicum", "Capsicum", [r"capsicum"]),
+        ("rabi_flaxseed", "Flaxseed/Linseed/Alsi", [r"flaxseed", r"linseed", r"\balsi\b"]),
+        ("rabi_niger", "Niger/Surguja", [r"surguja", r"surjuga", r"niger"]),
+        ("rabi_coriander", "Coriander/Dhania", [r"coriander", r"dhania"]),
+        ("rabi_radish", "Radish/Mooli", [r"radish", r"mooli"]),
+        ("rabi_carrot", "Carrot", [r"carrot"]),
+        ("rabi_cabbage", "Cabbage", [r"cabbage"]),
+        ("rabi_brinjal", "Brinjal", [r"brinjal", r"eggplant"]),
+        ("rabi_sugarcane", "Sugarcane", [r"sugarcane"]),
     ]
 
     for indicator, label, patterns in crop_patterns:

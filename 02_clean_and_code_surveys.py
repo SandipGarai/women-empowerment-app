@@ -44,6 +44,31 @@ OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 metadata_columns = ["Question No", "Section", "Particular", "Question"]
 
+def real_respondent_columns(df, metadata_columns):
+    """
+    Return only the columns that are genuinely respondents.
+
+    Spreadsheets routinely carry phantom trailing columns: one stray character
+    far to the right of the data makes pandas invent hundreds of "Unnamed: N"
+    columns. Counting those as respondents inflated the General Public sheet
+    from 53 to 269 and produced a false validation FAIL, and it also created
+    hundreds of empty respondent records in the long-format data.
+
+    A real respondent column has a proper header (not "Unnamed: N") and at
+    least one non-blank answer.
+    """
+    keep = []
+    for col in df.columns:
+        if col in metadata_columns:
+            continue
+        if str(col).startswith("Unnamed:"):
+            continue
+        if df[col].isna().all():
+            continue
+        keep.append(col)
+    return keep
+
+
 excel_file = pd.ExcelFile(EXCEL_PATH)
 survey_sheets = {
     sheet_name: pd.read_excel(EXCEL_PATH, sheet_name=sheet_name)
@@ -54,7 +79,7 @@ long_tables = []
 
 for sheet_name, df in survey_sheets.items():
     # Standardize metadata column names by using the known question descriptor columns.
-    respondent_columns = [col for col in df.columns if col not in metadata_columns]
+    respondent_columns = real_respondent_columns(df, metadata_columns)
 
     # Convert each respondent column into rows.
     long_df = df.melt(
@@ -409,6 +434,54 @@ coded_rows = survey_clean.apply(
 )
 
 survey_clean[["response_clean", "response_code", "cleaning_note"]] = coded_rows
+
+
+# Harmonise capitalisation of short categorical answers.
+#
+# Field entry produced both "Yes"/"yes" and "Cooperative"/"cooperative", which
+# split a single category into two rows in every frequency table. Women
+# Representative Q37 for example reported "Yes 5/8" and "yes 3/8" instead of the
+# correct "Yes 8/8". Long free-text answers are left alone so wording is preserved.
+
+def harmonise_case(value):
+    text = str(value).strip()
+    if not text or len(text.split()) > 4:
+        return text
+    if text.isupper() and len(text) <= 5:   # keep acronyms such as ST, SC, OBC, PG
+        return text
+    return text[0].upper() + text[1:] if text else text
+
+
+# Documented spelling corrections for unambiguous field-entry typos.
+# Each correction is listed explicitly so the edit is auditable - nothing is
+# guessed or fuzzy-matched.
+SPELLING_FIXES = {
+    "ward memebr": "Ward Member",
+    "ward memeber": "Ward Member",
+    "matriculate": "Matriculation",
+    "non matriculate": "Below Matriculation",
+    "weakned parha system": "Weakened Parha system",
+    "coomunication": "communication",
+    "powerfull": "powerful",
+}
+
+
+def apply_spelling_fixes(value):
+    text = str(value).strip()
+    return SPELLING_FIXES.get(text.lower(), text)
+
+
+for _col in ["response_clean", "response_code"]:
+    survey_clean[_col] = survey_clean[_col].map(apply_spelling_fixes)
+
+_before = survey_clean["response_clean"].copy()
+survey_clean["response_clean"] = survey_clean["response_clean"].map(harmonise_case)
+# response_code drives the frequency tables in 04, so it must be harmonised too.
+survey_clean["response_code"] = survey_clean["response_code"].map(harmonise_case)
+_changed = int((_before != survey_clean["response_clean"]).sum())
+if _changed:
+    survey_clean.loc[_before != survey_clean["response_clean"], "cleaning_note"] = "standardized_case"
+    print(f"Harmonised capitalisation on {_changed:,} short categorical answers")
 
 # Mark rows where the cleaned response changed from the text-normalized raw response.
 survey_clean["response_text_normalized"] = survey_clean["response_text"].apply(normalize_text)

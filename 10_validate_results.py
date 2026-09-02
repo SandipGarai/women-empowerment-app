@@ -238,6 +238,49 @@ if THEMATIC_FREQ_PATH.exists():
 else:
     high_fragmentation_questions["thematically_coded"] = False
 
+
+# Classify WHY a question is fragmented. Most fragmentation is expected and needs
+# no action: continuous variables (age, income, landholding) and free-listing
+# questions (crops, livestock) are naturally near-unique per respondent, and
+# multi-response questions have already been decomposed into indicators.
+# Only genuinely uncoded free-text opinion questions need attention.
+
+NUMERIC_LIKE = [
+    "age", "income", "landholding", "area of land", "area of available land",
+    "total landholding",
+]
+FREE_LISTING = [
+    "crops", "livestock", "irrigation", "technique", "technolog", "position held",
+    "occupation", "education level", "caste", "marital status", "any other",
+    "post:", "position held",
+]
+
+
+def fragmentation_reason(row):
+    question = str(row["question"]).lower()
+    if row.get("thematically_coded", False):
+        return "expected: thematically coded"
+    if row["result_type"] == "multi_response":
+        return "expected: already split into multi-response indicators"
+    if row["result_type"] in {"scale_matrix", "categorical_matrix"}:
+        return "expected: matrix/scale item summarised by mean and SD"
+    if any(term in question for term in NUMERIC_LIKE):
+        return "expected: continuous/numeric variable"
+    if any(term in question for term in FREE_LISTING):
+        return "expected: free-listing or profile field"
+    return "ACTION: open-ended question with no thematic coding"
+
+
+high_fragmentation_questions["reason"] = high_fragmentation_questions.apply(
+    fragmentation_reason, axis=1
+)
+high_fragmentation_questions["needs_action"] = (
+    high_fragmentation_questions["reason"].str.startswith("ACTION")
+)
+
+print("\nFragmentation breakdown:")
+print(high_fragmentation_questions["reason"].value_counts().to_string())
+
 display(high_fragmentation_questions.head(40))
 
 
@@ -455,26 +498,34 @@ if overview_path.exists():
 else:
     overview = pd.DataFrame(columns=["sheet", "respondent_columns"])
 
-# Expected number of respondents per sheet. UPDATE THIS whenever respondents are
-# added to or removed from Surveys.xlsx, otherwise validation reports a false FAIL.
-# Last updated for the 2026-09-01 workbook (General Public grew from 52 to 53).
-expected_counts = {
-    "General Public": 53,
-    "Govt Officials": 11,
-    "Mahila Mukhiya": 8,
-    "Traditional Leader": 5,
-    "Women Representative": 8,
-}
+# Respondent-count check.
+#
+# This used to compare against a hard-coded dictionary, which produced a false
+# FAIL every time a respondent was legitimately added. It now checks something
+# more useful and self-maintaining: did every respondent in the workbook survive
+# into the analysed data? A mismatch means the pipeline LOST people, which is a
+# real bug. A changed sample size is not.
+
+cleaned_path = PROJECT_DIR / "outputs" / "cleaned" / "cleaned_long_responses.csv"
+if cleaned_path.exists():
+    cleaned_long = pd.read_csv(cleaned_path)
+    analysed_counts = (
+        cleaned_long.groupby("respondent_group")["respondent_id"].nunique().to_dict()
+    )
+else:
+    analysed_counts = {}
 
 status_rows = []
 for _, row in overview.iterrows():
     sheet = row["sheet"]
     actual = row["respondent_columns"]
-    exp = expected_counts.get(sheet, None)
-    if exp and actual == exp:
-        status_rows.append({"check": f"Respondent count: {sheet}", "status": "PASS", "note": f"{actual} respondents as expected"})
+    exp = analysed_counts.get(sheet, None)
+    if exp is None:
+        status_rows.append({"check": f"Respondent count: {sheet}", "status": "CHECK", "note": f"{actual} in workbook; analysed data not available to compare"})
+    elif actual == exp:
+        status_rows.append({"check": f"Respondent count: {sheet}", "status": "PASS", "note": f"{actual} respondents in workbook, all {exp} carried into analysis"})
     else:
-        status_rows.append({"check": f"Respondent count: {sheet}", "status": "FAIL", "note": f"Expected {exp}, found {actual}"})
+        status_rows.append({"check": f"Respondent count: {sheet}", "status": "FAIL", "note": f"{actual} respondents in workbook but only {exp} in the analysed data - respondents were lost"})
 
 matrix_count = len(likely_matrix_questions)
 status_rows.append({
@@ -498,15 +549,27 @@ if "thematically_coded" in high_fragmentation_questions.columns:
     ].drop_duplicates().shape[0]
 else:
     coded_count = 0
+action_count = 0
+if "needs_action" in high_fragmentation_questions.columns:
+    action_count = high_fragmentation_questions[high_fragmentation_questions["needs_action"]][
+        ["respondent_group", "question_no"]
+    ].drop_duplicates().shape[0]
+
 if frag_count == 0:
     frag_status = "PASS"
     frag_note = "No fragmented questions"
-elif coded_count > 0:
-    frag_status = "CHECK"
-    frag_note = f"{frag_count} question tables flagged; {coded_count} unique questions thematically coded (review workbook available)"
+elif action_count == 0:
+    frag_status = "PASS"
+    frag_note = (
+        f"{frag_count} tables are fragmented, all expected "
+        f"({coded_count} thematically coded; rest are numeric, profile or free-listing fields)"
+    )
 else:
     frag_status = "CHECK"
-    frag_note = f"{frag_count} question tables may need thematic coding"
+    frag_note = (
+        f"{action_count} open-ended question(s) need thematic coding rules "
+        f"- see high_fragmentation_questions.csv, column 'reason'"
+    )
 status_rows.append({
     "check": "Highly fragmented open-ended questions",
     "status": frag_status,

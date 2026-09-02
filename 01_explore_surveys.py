@@ -71,11 +71,36 @@ for sheet_name, df in survey_sheets.items():
 
 metadata_columns = ["Question No", "Section", "Particular", "Question"]
 
+
+def real_respondent_columns(df, metadata_columns):
+    """
+    Return only the columns that are genuinely respondents.
+
+    Spreadsheets routinely carry phantom trailing columns: one stray character
+    far to the right of the data makes pandas invent hundreds of "Unnamed: N"
+    columns. Counting those as respondents inflated the General Public sheet
+    from 53 to 269 and produced a false validation FAIL, and it also created
+    hundreds of empty respondent records in the long-format data.
+
+    A real respondent column has a proper header (not "Unnamed: N") and at
+    least one non-blank answer.
+    """
+    keep = []
+    for col in df.columns:
+        if col in metadata_columns:
+            continue
+        if str(col).startswith("Unnamed:"):
+            continue
+        if df[col].isna().all():
+            continue
+        keep.append(col)
+    return keep
+
 overview_rows = []
 
 for sheet_name, df in survey_sheets.items():
     # Respondent columns are all columns after the standard question metadata fields.
-    respondent_columns = [col for col in df.columns if col not in metadata_columns]
+    respondent_columns = real_respondent_columns(df, metadata_columns)
 
     overview_rows.append(
         {
@@ -143,7 +168,7 @@ missingness_by_column.sort_values(
 long_tables = []
 
 for sheet_name, df in survey_sheets.items():
-    respondent_columns = [col for col in df.columns if col not in metadata_columns]
+    respondent_columns = real_respondent_columns(df, metadata_columns)
 
     # id_vars stay fixed for each question; value_vars become respondent-response rows.
     long_df = df.melt(

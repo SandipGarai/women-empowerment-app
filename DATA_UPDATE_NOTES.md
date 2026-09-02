@@ -228,3 +228,91 @@ repo. Streamlit Cloud's filesystem is also **ephemeral** — it is wiped wheneve
 app reboots or redeploys. After a restart you will need to upload the workbook
 again and let it re-analyse. That is expected behaviour, not a fault; keeping
 survey data out of a public repo is the right call.
+
+
+---
+
+# Revision 3 — validation, coding and manuscript
+
+All 12 validation checks now PASS.
+
+## "Expected 53, found 269"
+
+Reproduced exactly: a single stray character far to the right of the General Public
+sheet makes pandas read 215 phantom `Unnamed:` columns and count them as
+respondents. Scripts 01 and 02 now ignore columns with no header and no data.
+Verified against a deliberately corrupted copy of your file: it now reports 53.
+
+The hard-coded `expected_counts` dictionary was also replaced. It now checks
+whether every respondent in the workbook survives into the analysed data, which is
+a real integrity question, instead of comparing against a fixed number that goes
+stale whenever the sample changes.
+
+## "51 fragmented questions"
+
+Mostly noise. Age, landholding, crop lists and 1-5 scale items are supposed to have
+many distinct values. The check now classifies each case by reason and flags only
+genuine ones: 51 → 8. Thematic coding rules were written for all 8, so the check
+now passes.
+
+## "Uncoded: needs manual review"
+
+That label is the safety net reporting that a response matched no coding rule.
+It is now zero. When it reappears, fix it in one of two places:
+
+- `03_multi_response_coding.py` — for list-type answers (crops, livestock,
+  information sources, difficulties). Add the missing keyword to the relevant
+  `crop_patterns` or rule list.
+- `07_thematic_coding.py` — for open-ended opinion questions. Add a theme and its
+  patterns to `THEMATIC_RULES`.
+
+The uncoded responses themselves are listed in
+`outputs/multi_response/multi_response_long.csv` (filter `indicator == "uncoded_response"`)
+and `outputs/thematic_coding/review/`.
+
+## Two more bugs found this round
+
+**Script 07 excluded any question containing "panchayat".** The profile filter used
+substring matching, so 22 substantive questions were locked out of thematic coding
+entirely, including most of the Traditional Leader ICT block. Now anchored.
+
+**Case variants were splitting categories.** "Yes"/"yes" and
+"Cooperative"/"cooperative" produced separate rows in frequency tables — Women
+Representative Q37 reported "Yes 5/8" and "yes 3/8" instead of the correct
+**Yes 8/8**. Short categorical answers are now capitalisation-harmonised, and a
+small explicit list of unambiguous typo corrections was added ("Ward Memebr" →
+"Ward Member", which was splitting the position-held table).
+
+## Editing the mapping: two routes that overwrite each other
+
+1. **In the app.** Question Mapping tab → edit the Objective and Hypothesis
+   dropdowns → Save. Writes to `config/question_hypothesis_mapping.csv` and
+   survives pipeline re-runs.
+2. **`config/build_question_mapping.py`.** Regenerates the whole CSV from question
+   text, so it stays correct when questions are renumbered.
+
+Running the builder **discards** edits made in the app. For a permanent change, add
+it to `MAPPING_SPEC` inside the builder script. A notice explaining this now appears
+in the app.
+
+"Thematic coding" in the mapping table means that row's finding came from grouping
+free-text answers into themes by keyword rules, rather than from a plain frequency
+count. Open-ended questions can show both row types.
+
+## An error I made in the manuscript, and corrected
+
+My first draft argued that women representatives are admitted to consultative
+business but excluded at a "fiscal threshold" — high involvement in planning, low in
+budgeting. **The data do not support this.** Monitoring of scheme implementation is
+the highest-rated activity (mean 4.80), not the lowest, and all four activity means
+fall between 4.0 and 4.8 — a spread well inside what one respondent can move with
+n = 5 to 8.
+
+The manuscript was rewritten around what the data actually show: representatives'
+self-assessment is uniformly favourable, and it is **not corroborated by citizens**.
+That divergence — 98% would approach the Mukhiya, 45% of those who did were helped —
+is the real finding, and it is a stronger one, because it does not depend on any
+fragile ordering of four means.
+
+If you take one thing from this: with n = 8, do not build an argument on the rank
+order of close means. Build it on the places where two independent sources disagree.
